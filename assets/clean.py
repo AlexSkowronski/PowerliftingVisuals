@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 # NOT IN USAGE
 def drop_columns(df):
@@ -53,3 +54,49 @@ def check_event_with_lifts(df):
             events_to_check[events].append("Best3SquatKg")
         if 'D' not in events:
             events_to_check[events].append("Best3DeadliftKg")
+
+def drop_null_weights(df):
+    """Drop rows where no weight class nor bodyweight exists"""
+    return df.loc[(df["BodyweightKg"].notnull()) & (df["WeightClassKg"].notnull())]
+
+# Not working, just going to drop it for now
+def empty_weight_classes(df):
+    df.loc[df["WeightClassKg"] == "+"]["WeightClassKg"] = df.loc[df["WeightClassKg"] == "+"]["BodyweightKg"]
+    pass
+
+def redefine_weight_classes(df):
+    """Create new weight class under IPF rules based off of existing weight class"""
+    M_bins = [0, 53, 59, 66, 74, 83, 93, 105, 120, 999]
+    F_bins = [0, 43, 47, 52, 57, 63, 69, 76, 84, 999]
+
+    M_labels = ["-53", "53-59", "59-66", "66-74", "74-83", "83-93", "93-105", "105-120", "120+"]
+    F_labels = ["-43", "43-47", "47-52", "52-57", "57-63", "63-69", "69-76", "76-84", "84+"]
+
+    """Remove + from weight classes and convert to numeric datatype"""
+    df["IPFWeightClassKg"] = df["WeightClassKg"].apply(lambda row: row.replace("+", ""))
+    df["IPFWeightClassKg"] = pd.to_numeric(df["IPFWeightClassKg"])
+
+    """Check each value of the row and put in the correct bin"""
+    df_female = df.loc[df["Sex"] == "F"]
+    df_male = df.loc[(df["Sex"] == "M") | (df["Sex"] == "Mx")]
+    df_female["IPFWeightClassKg"] = pd.cut(df_female["IPFWeightClassKg"], bins = F_bins, labels = F_labels)
+    df_male['IPFWeightClassKg'] = pd.cut(df_male['IPFWeightClassKg'], bins = M_bins, labels = M_labels)
+
+    return pd.concat([df_female, df_male])
+
+def assume_untested(df):
+    df.loc[df["Tested"].isna(), "Tested"] = False
+    pass
+
+def fill_unknown_values(df, column_name:str, value_to_fill):
+    df[column_name].fillna(value_to_fill, inplace = True)
+    pass
+
+def assume_federation(df):
+    df["ParentFederation"] = np.where(df["ParentFederation"].isna(), df["Federation"], df["ParentFederation"])
+    pass
+
+def fill_lift_scores(df):
+    criteria = ["Dots", "Wilks", "Glossbrenner", "Goodlift"]
+    df[criteria] = df[criteria].fillna(value = 0)
+    pass
