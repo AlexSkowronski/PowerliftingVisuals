@@ -50,7 +50,7 @@ def main():
 
     """Cleaning metric and federation data"""
     clean_metric_federation_data(df)
-    df.to_csv("./data.csv")
+    df.to_csv("./data.csv", index = False)
     """Cleaning age data"""
 
 if __name__ == "__main__":
