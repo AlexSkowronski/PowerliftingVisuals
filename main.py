@@ -13,7 +13,7 @@ def clean_lift_data(df):
     calculate_total(df)
     """Returns boolean for new column: 'ValidComp' if non-zero total and qualified i.e. no disqualifications, not showing up, failing all lifts, etc."""
     df = validate_comp(df)
-    pass
+    return df
 
 def clean_weight_data(df):
     """Removes rows where no WeightClass nor Bodyweight are available"""
@@ -22,7 +22,7 @@ def clean_weight_data(df):
     fix_plus_weightclass(df)
     """Created IPF Weight Class, takes WeightClass entry and removes any plus signs, assigns them into bins according to IPF weight classes"""
     df = redefine_weight_classes(df)
-    pass
+    return df
 
 def clean_metric_federation_data(df):
     """If null values False, if Yes gives True"""
@@ -36,22 +36,38 @@ def clean_metric_federation_data(df):
 
     """All metrics with null values, taken to be zero"""
     fill_lift_scores(df)
-    pass
+    return df
+
+def clean_age_data(df):
+
+    df = rename_entries(df)
+
+    df = discard_empty_ages(df)
+
+    df = lazy_drop(df)
+
+    redefine_age_classes(df)
+
+    return df
 
 def main():
     """Load into dataframe from extracted csv dataset"""
     df = pd.read_csv(extract_dataset(ADDRESS))
 
     """Cleaning lift related data"""
-    clean_lift_data(df)
+    df = clean_lift_data(df)
 
     """Cleaning weight related data"""
-    clean_weight_data(df)
+    df = clean_weight_data(df)
 
     """Cleaning metric and federation data"""
-    clean_metric_federation_data(df)
-    df.to_csv("./data.csv", index = False)
+    df = clean_metric_federation_data(df)
+
     """Cleaning age data"""
+    df = clean_age_data(df)
+
+    """ Export local csv of cleaned data """
+    df.to_csv("./data.csv", index = False)
 
 if __name__ == "__main__":
     main()

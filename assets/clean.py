@@ -133,13 +133,18 @@ def fill_lift_scores(df):
 ##############################################################################
 
 """Start: Age related data clean up"""
-def rename_80to999(df):
-    df["AgeClass"] = df["AgeClass"].apply(lambda row: "80-100" if row == "80-999" else row)
-    pass
+def rename_entries(df):
+    df["AgeClass"] = df["AgeClass"].apply(lambda row: "80+" if row == "80-999" else row)
+    df["BirthYearClass"] = df["BirthYearClass"].apply(lambda row: "70+" if row == "70-999" else row)
+    return df
 
-def discard_invalid_ages(df):
-    df = df.loc[~((df["Age"].notna()) & (df["AgeClass"].isna()))]
-    pass
+def discard_empty_ages(df):
+    df = df.loc[~((df["Age"].isna()) & (df["AgeClass"].isna()) & (df["BirthYearClass"].isna()))]
+    df = df[~((df["Age"].notna()) & (df["AgeClass"].isna()))]
+    return df
+
+def lazy_drop(df):
+    return df.dropna()
 
 def redefine_age_classes(df):
     class_conversion = {
@@ -149,8 +154,7 @@ def redefine_age_classes(df):
         "40-44": "40-49", "45-49": "40-49",
         "50-54": "50-59", "55-59": "50-59",
         "60-64": "60-69", "65-69": "60-69",
-        "70-74": "70+", "75-79": "70+", "80-999": "70+",
-        "nan": "None"
-        }
-    df["BirthYearClass"] = df["AgeClass"].apply(lambda row: class_conversion[row] if type(row) == str else "Unavailable")
+        "70-74": "70+", "75-79": "70+", "80+": "70+"
+    }
+    df["IPFAgeClass"] = df["AgeClass"].apply(lambda row: class_conversion[row] if type(row) == str else "Unavailable")
     pass
